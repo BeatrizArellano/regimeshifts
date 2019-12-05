@@ -4,7 +4,7 @@
 Created on Fri Nov 15 18:19:31 2019
 
 
-@author: ra499
+@author: polaris
 """
 import math
 import pandas as pd
