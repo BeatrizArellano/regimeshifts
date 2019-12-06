@@ -2,7 +2,10 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Nov 15 18:19:31 2019
-
+This script contains the class Ews with the methods to estimate 
+the changes in autocorrelation in a timeseries.
+This is based on the idea that when a regime shift is approaching 
+the autocorrelation is expected to increase.
 
 @author: polaris
 """
@@ -14,7 +17,8 @@ import statsmodels.api as sm
 
 class Ews(pd.Series):
     """
-    This class 
+    Ews (Early Warning Signals) extends the methods of a Pandas Series 
+    to include useful tools to estimate changes in autocorrelation.
     """
     class Filtered_ts:
         def __init__(self,ts, trend):
