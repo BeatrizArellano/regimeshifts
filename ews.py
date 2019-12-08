@@ -37,11 +37,12 @@ class Ews(pd.Series):
         """
         if detrend is True:
             self = self.gaussian_det(**kwargs).res
-        if wL > len(self):
+        if wL > len(self.dropna()):
             raise ValueError('Window length cannot be  greater than time series length')
-        wL = math.floor(len(self)*wL) if wL <= 1 else wL
+        wL = math.floor(len(self.dropna())*wL) if wL <= 1 else wL
         ar1c = pd.Series(index=self.index)
-        for i in range(0,len(self)-wL):
+        ti = self.dropna().index.min()
+        for i in range(ti,ti + len(self.dropna())-wL):
             ar1c[wL+i] = sm.OLS(self[i+1:i+wL+1].values, sm.add_constant(self[i:i+wL].values)).fit().params[1]
         return Ews(ar1c)
     def var(self,wL=0.5,detrend=False,**kwargs):
