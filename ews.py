@@ -10,6 +10,7 @@ the autocorrelation is expected to increase.
 @author: polaris
 """
 import math
+import numpy as np
 import pandas as pd
 from scipy.ndimage.filters import gaussian_filter
 import statsmodels.api as sm
@@ -77,5 +78,27 @@ class Ews(pd.Series):
         tsCorr = pd.Series(self.dropna().index,self.dropna().index)
         kendall = self.dropna().corr(tsCorr, method="kendall")
         return kendall
+    
+    def bootstrap(self,n=1000,detrend=False,wL=0.5,lag=1,**kwargs):
+        """
+        Creates an ensemble of n members in which each member is the same
+        length as the original timeseries and its elements are obtained
+        sampling from the residuals (after detrending) with replacement.
+        Returns an array with the kendall value of the AR(1) changes for each
+        ensemble member.
+        """
+        if detrend is True:
+            self = self.gaussian_det(**kwargs).res
+        kendalls = []
+        for i in range(0,n):
+            sample = Ews(pd.Series(np.random.choice(self.values,len(self))))
+            kc = sample.ar1(wL=wL).kendall
+            kendalls.append(kc)
+        return pd.Series(kendalls)
+            
+            
+            
+            
+            
             
 
