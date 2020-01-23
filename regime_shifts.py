@@ -56,7 +56,7 @@ class Regime_shift(pd.Series):
         rs_time = self.as_detect().idxmax()
         return self.iloc[:rs_time]
     
-def Sample_rs():
+def sample_rs():
     """
     sample_rs returns a sample time series with a regime shift
     """
