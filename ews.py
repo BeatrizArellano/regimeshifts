@@ -50,7 +50,9 @@ class Ews(pd.Series):
             The wrapper function receives the instance and the keyword 
             arguments.
             """
-            filt_args = set(inspect.signature(inst.gaussian_det).parameters.keys()).union(set(inspect.signature(gaussian_filter).parameters.keys()))                   
+            ### __code__.co_varnames can be used to get the list of parameter a function expects but if that function is decorated it could 
+            ### get the decorator parameters, inspect.signature gets the original parameters
+            filt_args = set(inst.gaussian_det.__code__.co_varnames).union(set(inspect.signature(gaussian_filter).parameters.keys()))                   
             detr_kwargs = {k: kwargs[k] for k in (kwargs.keys() & filt_args)} # Obtains the parameteres to be used for the gaussian filter            
             if 'detrend' in kwargs:            
                 if kwargs['detrend'] is True:                                 
