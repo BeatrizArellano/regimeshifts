@@ -29,7 +29,36 @@ class Ews(pd.Series):
             self.res = Ews(ts - trend)
     def gaussian_det(self,bW,**kwargs):
         """
-        Detrends a time series using the `scipy.ndimage.gaussian_filter` function.
+        Detrends a time-series applying a Gaussian filter.
+        
+        This method detrends a time series using the `scipy.ndimage.gaussian_filter`
+        function.
+        
+        Parameters
+        ----------
+        bW: scalar
+            Bandwidth is actually the parameter sigma in the original scipy
+            function: Standard deviation for Gaussian kernel. 
+        **kwargs:
+            The possible parameters for the `scipy.ndimage.gaussian_filter` function.
+            
+        Returns
+        -------
+        object
+            An object with the properties:
+                - trend: Pandas Series containing the filtered time-series.
+                - res:   Pandas Series containing the residuals after filtering.
+                
+         Notes
+        -----
+
+        Examples
+        --------
+        noise = np.random.normal(0,20,1000)
+        ts = pd.Series(np.arange(0,100,0.1)*2+ noise)
+        ts = Ews(ts)
+        trend = ts.gaussian_det(bW=30).trend
+        res = ts.gaussian_det(bW=30).res
         """        
         trend = gaussian_filter(self.dropna().values, sigma = bW, **kwargs)
         trend = Ews(pd.Series(trend, index = self.dropna().index))                  
