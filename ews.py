@@ -9,6 +9,8 @@ the autocorrelation is expected to increase.
 
 @author: polaris
 """
+import functools
+import inspect
 import math
 import numpy as np
 import pandas as pd
@@ -27,44 +29,68 @@ class Ews(pd.Series):
             self.res = Ews(ts - trend)
     def gaussian_det(self,bW,**kwargs):
         """
-        Detrends a time series using a Gaussian filter
+        Detrends a time series using the `scipy.ndimage.gaussian_filter` function.
         """        
         trend = gaussian_filter(self.dropna().values, sigma = bW, **kwargs)
         trend = Ews(pd.Series(trend, index = self.dropna().index))                  
         return self.Filtered_ts(self,trend)
-    def ar1(self,wL=0.5,detrend=False,**kwargs):
+    def validator(func):
+        """
+        This function to be used as a decorator performs 3 tasks:            
+            - Calls the gaussian_det function according to the value of
+              the detrend parameter.
+            - Validates the window length: if it's greater than the whole 
+              series length it raises an error.
+            - Separates the keyword arguments to be used properly in the target
+              functions.
+        """
+        @functools.wraps(func)
+        def wrapper(inst,*args, **kwargs):
+            """
+            The wrapper function receives the instance and the keyword 
+            arguments.
+            """
+            filt_args = set(inspect.signature(inst.gaussian_det).parameters.keys()).union(set(inspect.signature(gaussian_filter).parameters.keys()))                   
+            detr_kwargs = {k: kwargs[k] for k in (kwargs.keys() & filt_args)} # Obtains the parameteres to be used for the gaussian filter            
+            if 'detrend' in kwargs:            
+                if kwargs['detrend'] is True:                                 
+                    inst = inst.gaussian_det(**detr_kwargs).res    ## Gets the residuals from the gaussian_det function
+            ### Estimates the window length size
+            wL = kwargs['wL'] if 'wL' in kwargs else inspect.signature(func).parameters['wL'].default            
+            wL = math.floor(len(inst.dropna())*wL) if wL <= 1 else wL
+            if wL > len(inst.dropna()):
+                raise ValueError('Window length cannot be  greater than the time series length')
+            roll_args = set(inspect.signature(inst.rolling).parameters.keys()).union(set(inspect.signature(func).parameters.keys())).difference(detr_kwargs).difference({'detrend','wL'})            
+            if 'method' in kwargs:                                     
+                roll_args = roll_args.union(set(inspect.signature(getattr(inst,kwargs['method'])).parameters.keys())).difference(detr_kwargs).difference({'detrend','wL'})                
+            roll_kwargs = {k: kwargs[k] for k in (kwargs.keys() & roll_args)} #Obtains the parameters to be used when rolling the window
+            
+            return func(inst, wL=wL, **roll_kwargs) ### Calls the function
+        return wrapper
+    
+    @validator
+    def ar1(self,detrend=False,wL=0.5,lag=1,**kwargs):
         """
         Estimates the coefficients of the autoregresive model
-        """
-        if detrend is True:
-            self = self.gaussian_det(**kwargs).res
-        if wL > len(self.dropna()):
-            raise ValueError('Window length cannot be  greater than time series length')
-        wL = math.floor(len(self.dropna())*wL) if wL <= 1 else wL
-        ar1c = self.rolling(window=wL).apply(
-                func=lambda x: sm.OLS(x[1:], sm.add_constant(x[:-1])).fit().params[1], raw=True)
+        """        
+        ar1c = self.rolling(window=wL,**kwargs).apply(
+                func=lambda x: sm.OLS(x[lag:], sm.add_constant(x[:-lag])).fit().params[1], raw=True)
         return Ews(ar1c)
-    def var(self,wL=0.5,detrend=False,**kwargs):
+    
+    @validator
+    def var(self,detrend=False,wL=0.5,**kwargs):
         """
         Estimates the variance for each window along the time series
-        """
-        if detrend is True:
-            self = self.gaussian_det(**kwargs).res
-        if wL > len(self):
-            raise ValueError('Window length cannot be  greater than time series length')
-        wL = math.floor(len(self)*wL) if wL <= 1 else wL
+        """        
         vari = self.rolling(window=wL).var()
         return Ews(vari)
-    def pearsonc(self,wL=0.5,detrend=False,lag=1,**kwargs):
+    
+    @validator
+    def pearsonc(self,detrend=False,wL=0.5,lag=1,**kwargs):
         """
         Estimates the Pearson correlation coefficients between the time series and itself shifted by lag
         """
-        if detrend is True:
-            self = self.gaussian_det(**kwargs).res
-        if wL > len(self):
-            raise ValueError('Window length cannot be  greater than time series length')
-        wL = math.floor(len(self)*wL) if wL <= 1 else wL
-        pcor = self.rolling(window=wL).apply(
+        pcor = self.rolling(window=wL,**kwargs).apply(
                 func=lambda x: pd.Series(x).autocorr(lag=lag), raw=True)
         return Ews(pcor)
     
@@ -78,7 +104,8 @@ class Ews(pd.Series):
         kendall = self.dropna().corr(tsCorr, method="kendall")
         return kendall
     
-    def bootstrap(self, method='ar1',n=1000,detrend=False,wL=0.5,lag=1,**kwargs):
+    @validator
+    def bootstrap(self, method='ar1',n=1000,detrend=False,wL=0.5,**kwargs):
         """
         Creates an ensemble of n members in which each member has the same
         length as the original timeseries and its elements are obtained
@@ -86,15 +113,12 @@ class Ews(pd.Series):
         Returns an array with the kendall value of the AR(1) or Variance
         changes for each ensemble member.
         """
-        if detrend is True:
-            self = self.gaussian_det(**kwargs).res
         kendalls = []
         for i in range(0,n):
-            sample = Ews(pd.Series(np.random.choice(self.values,len(self))))
-            kc = getattr(sample,method)(wL=wL).kendall
+            sample = Ews(pd.Series(np.random.choice(self.values,len(self))))                    
+            kc = getattr(sample,method)(wL=wL,**kwargs).kendall
             kendalls.append(kc)
         return pd.Series(kendalls)
-            
             
             
             
