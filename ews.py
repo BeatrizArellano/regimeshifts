@@ -80,7 +80,7 @@ class Ews(pd.Series):
     
     def bootstrap(self, method='ar1',n=1000,detrend=False,wL=0.5,lag=1,**kwargs):
         """
-        Creates an ensemble of n members in which each member is the same
+        Creates an ensemble of n members in which each member has the same
         length as the original timeseries and its elements are obtained
         sampling from the residuals (after detrending) with replacement.
         Returns an array with the kendall value of the AR(1) or Variance
