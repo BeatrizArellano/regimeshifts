@@ -14,13 +14,45 @@ from statsmodels import robust
 
 
 class Regime_shift(pd.Series):
+    """
+    Regime_shift extends the methods of a Pandas Series 
+    to implement a regime shift detection index.
+    """
     
     def as_detect(self, dt = 1, lwl = 5, hwl = 1/3):
         """
-        Function as_detect based on Chris Boulton & Tim Lenton approach for detecting regime shifts.
+        Estimates the regime shift detection index according to 
+        Chris Boulton & Tim Lenton's approach to detect regime shifts.
+        
+        Original paper:
         https://f1000research.com/articles/8-746
-        The same name as Boulton's function is used:
+        Original code in R:
         https://github.com/caboulton/asdetect
+        
+        Parameters
+        ----------
+        dt: float
+            Time step of the time series. 
+            Default: 1.
+            
+        lwl: int            
+            Lowest window length to estimate the gradient values.
+            Default:5
+            
+        hwl: int            
+            Highest window length to estimate the gradient values.
+            Default: 1/3 of the time series
+            
+        Returns
+        -------
+        pandas Series
+            A series of the same length as the original series containing
+            a value in the interval [-1,1] for each element of the series.
+            
+            This index indicates the proportion of windows that detected 
+            a gradient greater than 3 Median Absoulte Deviations of the 
+            distribution of gradients.         
+        
         """
         l = len(self)
         if isinstance(self, (pd.DataFrame,pd.Series)):
@@ -45,9 +77,9 @@ class Regime_shift(pd.Series):
             #Finding the absolute distances from the median bigger than 3 MADs        
             outliers = np.where(np.abs(gradients - np.median(gradients)) > 3 * robust.mad(gradients))[0]       
             for o in outliers:            
-                grad_rank[o*ws:o*ws+ws] +=  (1/len(w_sizes))*((1,-1)[int(gradients[o]- np.median(gradients) < 0)])
+                grad_rank[o*ws+pad:o*ws+ws+pad] +=  (1/len(w_sizes))*((1,-1)[int(gradients[o]- np.median(gradients) < 0)]) ## Adds +-1/(# of windows) to the ranking of gradients
         
-        return pd.Series(data = grad_rank, index = t)   
+        return pd.Series(data = grad_rank, index = t)  
     
     def before_rs(self):
         """
