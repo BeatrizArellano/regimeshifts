@@ -15,7 +15,7 @@ import math
 import numpy as np
 import pandas as pd
 from scipy.ndimage.filters import gaussian_filter
-import statsmodels.api as sm
+from statsmodels.tsa.ar_model import AutoReg
 
 
 class Ews(pd.Series):
@@ -27,7 +27,7 @@ class Ews(pd.Series):
         def __init__(self,ts, trend):
             self.trend = trend
             self.res = Ews(ts - trend)
-    def gaussian_det(self,bW,**kwargs):
+    def gaussian_det(self,bW, scale=True,**kwargs):
         """
         Detrends a time-series applying a Gaussian filter.
         
@@ -36,9 +36,17 @@ class Ews(pd.Series):
         
         Parameters
         ----------
-        bW: scalar
-            Bandwidth is actually the parameter sigma in the original scipy
-            function: Standard deviation for Gaussian kernel. 
+        bW: scalar                        
+            Bandwidth of the Gaussian smoother kernel. 
+            If scale is false, it is the parameter sigma in the original 
+            scipy function: Standard deviation for Gaussian kernel.           
+        scale: boolean
+            If True, scales the standard deviation of the smoothing kernel 
+            so that the quartiles of the Gaussian probability distribution 
+            are at +-1/4 *(bW).
+            The quartiles are +- 0.6745*(sigma), sigma is the standard deviation
+            for the Gaussian kernel.
+            scaled sigma = 0.25 * (1/0.6745) * bW
         **kwargs:
             The possible parameters for the `scipy.ndimage.gaussian_filter` function.
             
@@ -59,8 +67,12 @@ class Ews(pd.Series):
         ts = Ews(ts)
         trend = ts.gaussian_det(bW=30).trend
         res = ts.gaussian_det(bW=30).res
-        """        
-        trend = gaussian_filter(self.dropna().values, sigma = bW, **kwargs)
+        """
+        if scale == True:
+            sd = 0.25 * (1/0.6745) * bW
+        else:
+            sd = bW
+        trend = gaussian_filter(self.dropna().values, sigma = sd, **kwargs)
         trend = Ews(pd.Series(trend, index = self.dropna().index))                  
         return self.Filtered_ts(self,trend)
     def validator(func):
@@ -100,10 +112,20 @@ class Ews(pd.Series):
     @validator
     def ar1(self,detrend=False,wL=0.5,lag=1,**kwargs):
         """
-        Estimates the coefficients of the autoregresive model
+        Estimates the coefficients of an auautoregresive model of order 1
+        for each window rolled over the whole time-series.
+        The AR(1) is fitted using the Ordinary Least Squares method embedded 
+        in the statsmodels AutoReg function.
+    
+        Fits an autoregresive model of order 1 over the rolling window.
+        
+        Returns a pandas series containing the coefficients of the autoregresive
+        model.
         """        
+        #ar1cb = self.rolling(window=wL,**kwargs).apply(
+        #        func=lambda x: sm.OLS(x[lag:], sm.add_constant(x[:-lag])).fit().params[1], raw=True)
         ar1c = self.rolling(window=wL,**kwargs).apply(
-                func=lambda x: sm.OLS(x[lag:], sm.add_constant(x[:-lag])).fit().params[1], raw=True)
+                func=lambda x: AutoReg(x, lags=[lag]).fit().params[1], raw=True)
         return Ews(ar1c)
     
     @validator
@@ -117,7 +139,8 @@ class Ews(pd.Series):
     @validator
     def pearsonc(self,detrend=False,wL=0.5,lag=1,**kwargs):
         """
-        Estimates the Pearson correlation coefficients between the time series and itself shifted by lag
+        Estimates the Pearson correlation coefficients between the time series 
+        and itself shifted by lag.        
         """
         pcor = self.rolling(window=wL,**kwargs).apply(
                 func=lambda x: pd.Series(x).autocorr(lag=lag), raw=True)
