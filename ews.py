@@ -150,8 +150,8 @@ class Ews(pd.Series):
     @property
     def kendall(self):
         """
-        Estimates the Kendall correlation coefficient between the time series
-        and a perfectly correlated time series of the same length.
+        Estimates the Kendall Tau correlation coefficient between the 
+        indicator time series and time.
         """
         tsCorr = pd.Series(self.dropna().index,self.dropna().index)
         kendall = self.dropna().corr(tsCorr, method="kendall")
