@@ -67,9 +67,10 @@ class Ews(pd.Series):
         ts = Ews(ts)
         trend = ts.gaussian_det(bW=30).trend
         res = ts.gaussian_det(bW=30).res
-        """
+        """        
         if scale == True:
             sd = 0.25 * (1/0.6745) * bW
+            kwargs['truncate'] = 4 * (0.6745) #Bandwidth expressed in number of standard deviations
         else:
             sd = bW
         trend = gaussian_filter(self.dropna().values, sigma = sd, **kwargs)
