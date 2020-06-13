@@ -153,7 +153,12 @@ class Ews(pd.Series):
         Estimates the Kendall Tau correlation coefficient between the 
         indicator time series and time.
         """
-        tsCorr = pd.Series(self.dropna().index,self.dropna().index)
+        if self.index.dtype == 'datetime64[ns]':
+            mannSer = np.arange(1,self.dropna().index.size+1)
+        else:
+            mannSer = self.dropna().index
+        tsCorr = pd.Series(mannSer)
+        tsCorr.index = self.dropna().index        
         kendall = self.dropna().corr(tsCorr, method="kendall")
         return kendall
     
