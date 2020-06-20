@@ -134,7 +134,7 @@ class Ews(pd.Series):
         """
         Estimates the variance for each window along the time series
         """        
-        vari = self.rolling(window=wL).var()
+        vari = self.rolling(window=wL,**kwargs).var()
         return Ews(vari)
     
     @validator
