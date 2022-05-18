@@ -197,6 +197,15 @@ class Ews(pd.Series):
             kc = getattr(sample,method)(wL=wL,**kwargs).kendall
             kendalls.append(kc)
         return pd.Series(kendalls)
+    
+    @property   
+    def _constructor(self):
+        """
+        Overriding constructor properties to return an instance of Ews after
+        performing an operation on the Pandas series
+        """
+        return Ews
+
             
             
             
