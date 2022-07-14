@@ -3,7 +3,7 @@
 """
 Created on Thu Nov  7 13:48:00 2019
 
-@author: Polaris
+@author: Beatriz Arellano-Nava
 
 """
 import math
@@ -88,7 +88,7 @@ class Regime_shift(pd.Series):
         rs_time = self.as_detect().idxmax()
         return self.iloc[:rs_time]
     
-def sample_rs():
+def sample_rs(std = 0.1):
     """
     sample_rs returns a sample time series with a regime shift
     """
@@ -98,7 +98,7 @@ def sample_rs():
     a = np.full(len(t)+1,np.nan)    #setting up vector to hold created time series
     a[0] = -1                 #start it in the left well
     for i,e in enumerate(m):    
-        a[i+1] = a[i] + (1/2)*((-a[i]**3) + a[i] + e) + 0.1*np.random.normal() #uses forward euler to run the model over times          
+        a[i+1] = a[i] + (1/2)*((-a[i]**3) + a[i] + e) + std *np.random.normal() #uses forward euler to run the model over times          
     return Regime_shift(pd.Series(a))
       
     

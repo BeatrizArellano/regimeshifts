@@ -198,7 +198,7 @@ class Ews(pd.DataFrame):
             ts,wL = self._window_size(ts,wL)
             vari = ts.rolling(window=wL,**kwargs).var()
             return vari
-        vari = self.apply(_estimate_var, axis=0,wL=wL,**kwargs)
+        vari = self.apply(_estimate_var, axis=0,wL=wL,**kwargs)        
         return Ews(vari)
     
     @validator
@@ -344,10 +344,10 @@ class Ews(pd.DataFrame):
 
             """
             kendalls = []
-            ts = ts.loc[ts.first_valid_index():ts.last_valid_index()]  ## Selecting the valid range of the series          
+            ts = ts.loc[ts.first_valid_index():ts.last_valid_index()]  ## Selecting the valid range of the series
             for i in range(0,n):                
                 ## Bootstrapping the residuals to obtain a surrogate series
-                surrogate_ts = Ews(pd.Series(np.random.choice(ts.values,len(ts))))                
+                surrogate_ts = Ews(pd.Series(np.random.choice(ts.values,len(ts))))             
                 kc = getattr(surrogate_ts,indicator)(wL=wL,**kwargs).kendall ## Getting the kendall coefficient for each series
                 kendalls.append(float(kc))
             return kendalls
