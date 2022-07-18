@@ -270,26 +270,31 @@ class Ews(pd.DataFrame):
             fig,axs = plt.subplots(nr,nc,figsize=figsize,**kwargsplot)
             for i,col in enumerate(self.surrog_kendalls.columns):
                 ### Histogram
-                self.surrog_kendalls[col].hist(bins=nbins, ax=axs[i],grid=False,edgecolor = "black", color='tab:blue')
-                axs[i].axvline(self.kendall_coeff[col],color='r',linestyle='dashed', linewidth=1.5) ## Kendall coefficient measured on the original series
+                ax = axs if len(self.surrog_kendalls.columns)==1 else axs[i]
+                self.surrog_kendalls[col].hist(bins=nbins, ax=ax,grid=False,edgecolor = "black", color='tab:blue')
+                kc = self.kendall_coeff if len(self.surrog_kendalls.columns)==1 else self.kendall_coeff[col]
+                ax.axvline(kc,color='r',linestyle='dashed', linewidth=1.5) ## Kendall coefficient measured on the original series
                 pval = self.pvalue[col] 
                 psig = '*' if pval<signif_threshold else ''  ### Including the p-value as text
                 comp = '<' if pval<=0.001 else '='
                 pval = 0.001 if pval==0 else pval
                 posp = 0.03 if self.test_type=='positive' else 0.4
-                axs[i].text(posp, 0.9, f'p{comp}{pval:.3f}{psig}', transform=axs[i].transAxes, size=11)
-                axs[i].set_xlim(-1.15,1.15)
+                ax.text(posp, 0.9, f'p{comp}{pval:.3f}{psig}', transform=ax.transAxes, size=11)
+                ax.set_xlim(-1.15,1.15)
                 if 'sharey' in kwargsplot:
-                    axs[i].set_xlabel(r'Kendall $\tau$',fontsize=12)
+                    ax.set_xlabel(r'Kendall $\tau$',fontsize=12)
                     if i == 0:
-                        axs[i].set_ylabel('Density',fontsize=12)
+                        ax.set_ylabel('Density',fontsize=12)
                 elif 'sharex' in kwargsplot:
-                    axs[i].set_ylabel('Density',fontsize=12)
+                    ax.set_ylabel('Density',fontsize=12)
                     if i == ncol-1:
-                        axs[i].set_xlabel(r'Kendall $\tau$',fontsize=12)              
-                larger_ylim = axs[i].get_ylim()[1] if axs[i].get_ylim()[1] > larger_ylim else larger_ylim
-                axs[i].set_title(col,fontsize=13,weight='bold')
-            [axs[i].set_ylim(0,larger_ylim*1.1) for i in range(0,ncol)];
+                        ax.set_xlabel(r'Kendall $\tau$',fontsize=12)              
+                larger_ylim = ax.get_ylim()[1] if ax.get_ylim()[1] > larger_ylim else larger_ylim
+                ax.set_title(col,fontsize=13,weight='bold')
+            if len(self.surrog_kendalls.columns) > 1:
+                [axs[i].set_ylim(0,larger_ylim*1.1) for i in range(0,ncol)];
+            else:
+                axs.set_ylim(0,larger_ylim*1.1)
             
     
     @validator
