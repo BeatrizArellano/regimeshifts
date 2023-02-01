@@ -88,13 +88,28 @@ class Regime_shift(pd.Series):
         rs_time = self.as_detect().idxmax()
         return self.iloc[:rs_time]
     
-def sample_rs(std = 0.1):
+def sample_rs(length=999,transition_timing=0.9,std = 0.1):
     """
-    sample_rs returns a sample time series with a regime shift
+    sample_rs generates a sample time series with an underlying bifurcation
+
+    Parameters
+    ----------
+    length : integer, optional
+        Length of the time-series. The default is 999.
+    transition_timing : float [0,1], optional
+        Timing of the regime shift. The default is 0.9.
+    std : float, optional
+        standard deviation. The default is 0.1.
+
+    Returns
+    -------
+    Pandas Series
+        Time-series of a process approaching a tipping point.
+
     """
     mu = (2/9)*math.sqrt(3)     #Bifurcation parameter
-    t = np.arange(0,999,1)   #Time steps
-    m = mu*t/900              #The change in the bifurcation parameter over time (this is the length of t compared to mu which is a single value)    
+    t = np.arange(0,length,1)   #Time steps
+    m = mu*t / np.floor(length*transition_timing)          #The change in the bifurcation parameter over time (this is the length of t compared to mu which is a single value)    
     a = np.full(len(t)+1,np.nan)    #setting up vector to hold created time series
     a[0] = -1                 #start it in the left well
     for i,e in enumerate(m):    
