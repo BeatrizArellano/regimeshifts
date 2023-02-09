@@ -37,6 +37,7 @@ import numpy as np
 import pandas as pd
 from scipy.ndimage.filters import gaussian_filter
 from statsmodels.tsa.ar_model import AutoReg
+from scipy.stats import kendalltau
 
 
 class Ews(pd.DataFrame):
@@ -222,13 +223,15 @@ class Ews(pd.DataFrame):
         indicator time series and time.
         """
         def _estimate_kendall(ts):
-            if ts.index.dtype == 'datetime64[ns]':
-                mannSer = np.arange(1,ts.dropna().index.size+1)
-            else:
-                mannSer = ts.dropna().index
-            tsCorr = pd.Series(mannSer)
-            tsCorr.index = ts.dropna().index        
-            kendall = ts.dropna().corr(tsCorr, method="kendall")
+            # if ts.index.dtype == 'datetime64[ns]':
+            #     mannSer = np.arange(1,ts.dropna().index.size+1)
+            # else:
+            #     mannSer = ts.dropna().index
+            # tsCorr = pd.Series(mannSer)
+            # tsCorr.index = ts.dropna().index
+
+            # kendall = ts.dropna().corr(tsCorr, method="kendall")
+            kendall, _ = kendalltau(ts.dropna().values, np.arange(0,len(ts.dropna())))
             return kendall
         kendall = self.apply(_estimate_kendall, axis=0)
         kendall = float(kendall) if len(self.columns)==1 else kendall
