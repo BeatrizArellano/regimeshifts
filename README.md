@@ -47,7 +47,7 @@ ax.set_ylabel('System state',fontsize=12);
 
 ## Detecting regime shifts
 
-The `Regime_shift` class implements the algorithm proposed by [Boulton and Lenton (2019)](https://doi.org/10.12688/f1000research.19310.1) for detecting regime shifts in a time-series. This method identifies anomalous rates of change along the time-series.
+The `Regime_shift` class implements the algorithm proposed by [Boulton and Lenton (2019)](https://doi.org/10.12688/f1000research.19310.1) for detecting regime shifts in a time-series. This method identifies anomalous rates of change along the time-series by detecting large gradients over different segments of the time-series. It segments the time series into fixed-length intervals and applies linear regression to calculate the slope for each segment. Gradients that fall outside three median absolute deviations are deemed anomalous. This process is repeated for a range of segment lengths, from a user-defined minimum to a maximum of one-third the original time series length. The regime shift detection indices are computed as the proportion of segment lengths that exhibit an anomalous gradient at each point in the time series. The resulting index indicates the moments when abrupt changes are likely, marked by a higher frequency of detected anomalous gradients.
 
 To begin, we create an instance of the `Regime_shift` class by providing a `pandas` time-series as a parameter.
 
@@ -56,7 +56,7 @@ To begin, we create an instance of the `Regime_shift` class by providing a `pand
 ts = rs.Regime_shift(ts)
 ```
 
-The `as_detect` method computes a detection index that indicates how frequently each point in the time series is associated with an anomalous rate of change. It returns a time-series of indices in the interval [-1,1]. Values around 0 suggest a low likelihood of abrupt shifts, while values close to -1 or 1 indicate a high probability of an abrupt change occurring at that point. In this example, the largest value is detected precisely when the tipping point is reached in the original series.
+The `as_detect` method computes the regime shift detection index that indicates how frequently each point in the time series is associated with an anomalous rate of change. It returns a time-series of indices in the interval [-1,1]. Values around 0 suggest a low likelihood of abrupt shifts, while values close to -1 or 1 indicate a high probability of an abrupt change occurring at that point. In this example, the largest value is detected precisely when the tipping point is reached in the original series.
 
 
 ```python
