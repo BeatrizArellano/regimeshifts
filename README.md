@@ -47,7 +47,7 @@ ax.set_ylabel('System state',fontsize=12);
 
 ## Detecting regime shifts
 
-The `Regime_shift` class implements an algorithm proposed by [Boulton and Lenton (2019)](https://doi.org/10.12688/f1000research.19310.1) for detecting regime shifts in a time-series. This method identifies anomalous rates of change along the time-series.
+The `Regime_shift` class implements the algorithm proposed by [Boulton and Lenton (2019)](https://doi.org/10.12688/f1000research.19310.1) for detecting regime shifts in a time-series. This method identifies anomalous rates of change along the time-series.
 
 To begin, we create an instance of the `Regime_shift` class by providing a `pandas` time-series as a parameter.
 
