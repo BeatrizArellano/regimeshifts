@@ -1,12 +1,12 @@
 # regimeshifts
 
-`regimeshifts` s a Python library that provides functions for detecting regime shifts and identifying early warning signals for tipping points in time-series.
+`regimeshifts` is a Python library that provides functions for detecting regime shifts and identifying early warning signals for tipping points in time-series.
 
 
 ### Modules
 `regimeshifts` contains two modules:
 
-- `regime_shifts`: Contains a method for detecting regime shifts in time-series. 
+- `regime_shifts`: Provides a method for detecting regime shifts in time-series. 
 - `ews`: Provides functions to compute early warning signals or resilience indicators, along with tools to assess their robustness and significance.
 
 This repository can be copied into the working directory using the command:
@@ -56,7 +56,7 @@ To begin, we create an instance of the `Regime_shift` class by providing a `pand
 ts = rs.Regime_shift(ts)
 ```
 
-The `as_detect` method computes a detection index that indicates how frequently each point in the time series is associated with an anomalous rate of change. It returns a time-series of indices in the interval [-1,1]. Values around 0 suggest a low likelihood of abrupt shifts, while values close to -1 or 1 indicate a high probability of an abrupt change at that point. In this example, the largest value is detected precisely when the tipping point is reached in the original series.
+The `as_detect` method computes a detection index that indicates how frequently each point in the time series is associated with an anomalous rate of change. It returns a time-series of indices in the interval [-1,1]. Values around 0 suggest a low likelihood of abrupt shifts, while values close to -1 or 1 indicate a high probability of an abrupt change occurring at that point. In this example, the largest value is detected precisely when the tipping point is reached in the original series.
 
 
 ```python
