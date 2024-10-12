@@ -1,24 +1,19 @@
 # regimeshifts
 
-`regimeshifts` is a Python library that contains useful functions to detect early warning signals for an approaching regime shift on a time-series.
+`regimeshifts` s a Python library that provides functions for detecting regime shifts and identifying early warning signals for tipping points in time-series.
 
-The indicators implemented in this library are lag-1 autocorrelation and variance. The rationale behind these indicators is based on a phenomenon known as Critical Slowing Down: as a system approaches gradually a tipping point, its recovery rate from perturbations decreases leading to an increase in similarity over time. Those changes can be detected by measuring changes in lag-1 autocorrelation and variance. Usually a tipping point is preceded by an increase in both metrics, if approached gradually ([see Scheffer et al. (2009)](https://doi.org/10.1038/nature08227)).
-
-Since these metrics do not constitute a forecast tool to predict the distance to the tipping point, they are regarded as indicators of resilience and/or stability of a system ([see Dakos et al. (2015)](https://doi.org/10.1098/rstb.2013.0263)).
-
-**Note:** This library is still under development, although the implemented methods are fairly tested. 
 
 ### Modules
 `regimeshifts` contains two modules:
 
-- `ews`: Contains useful methods to compute the resilience indicators, their robustness and significance.
-- `regime_shifts`: Contains a method to detect regime shifts in a time-series.
+- `regime_shifts`: Contains a method for detecting regime shifts in time-series. 
+- `ews`: Provides functions to compute early warning signals or resilience indicators, along with tools to assess their robustness and significance.
 
 This repository can be copied into the working directory using the command:
 
-`https://github.com/BeatrizArellano/regimeshifts.git`
+`git clone https://github.com/BeatrizArellano/regimeshifts.git`
 
-Both modules can be imported as follows (assuming the folder `regimeshifts` is at the same level of the script in which they are imported):
+Both modules can be imported as follows, assuming that the folder `regimeshifts` is located at the same level as the script:
 
 
 ```python
@@ -28,7 +23,7 @@ from regimeshifts import ews
 
 ### Creating a time-series with a tipping point
 
-`sample_rs` is a useful function in the module `regime_shifts` to create a time-series with a bifurcation and stochastic variability (normally distributed noise with specified standard deviation).
+The `sample_rs` function, available in the `regime_shifts` module, generates a time-series using a stochastic differential equation to simulate an abrupt transition induced by a bifurcation, with normally distributed noise and a specified standard deviation.
 
 
 ```python
@@ -52,17 +47,16 @@ ax.set_ylabel('System state',fontsize=12);
 
 ## Detecting regime shifts
 
-The class `Regime_shift` contains a useful method proposed by [Boulton and Lenton (2019)](https://doi.org/10.12688/f1000research.19310.1) to detect regime shifts in a time-series. This method looks for gradient changes that occur overa small time interval. 
+The `Regime_shift` class implements an algorithm proposed by [Boulton and Lenton (2019)](https://doi.org/10.12688/f1000research.19310.1) for detecting regime shifts in a time-series. This method identifies anomalous rates of change along the time-series.
 
-First, we create an instance of the class `Regime_shifts` passing a `pandas` time-series as a parameter.
+To begin, we create an instance of the `Regime_shift` class by providing a `pandas` time-series as a parameter.
 
 
 ```python
 ts = rs.Regime_shift(ts)
 ```
 
-The method `as_detect` computes the detection indices returning a time-series containing values in the interval [-1,1] along the time-series. The greatest (smallest) values may indicate the occurrence of a regime shift.
-In this example, the largest value is detected exactly when the tipping point is reached in the original series. 
+The `as_detect` method computes a detection index that indicates how frequently each point in the time series is associated with an anomalous rate of change. It returns a time-series of indices in the interval [-1,1]. Values around 0 suggest a low likelihood of abrupt shifts, while values close to -1 or 1 indicate a high probability of an abrupt change at that point. In this example, the largest value is detected precisely when the tipping point is reached in the original series.
 
 
 ```python
@@ -83,7 +77,7 @@ ax.set_ylabel('Detection Index',fontsize=12);
     
 
 
-The `before_rs` method can be used to extract the data before the regime-shift:
+The `before_rs` method can be used to extract the data preceding the regime shift:
 
 
 ```python
@@ -104,25 +98,28 @@ ax.set_ylabel('System state',fontsize=12);
     
 
 
-## Early warning signals (resilience indicators)
+## Early warning signals for tipping points (resilience indicators)
 
-From the proposed indicators for Critical Slowing Down in the literature, we included methods to measure temporal lag-1 autocorrelation and variance. The time-series are usually detrended prior to estimating the indicators ([see Lenton et al. (2012)](https://doi.org/10.1098/rsta.2011.0304)).
+The approach to detecting early warning signals for tipping points is based on identifying the generic symptoms of a phenomenon known as Critical Slowing Down. As a system gradually approaches a tipping point, its recovery rate from perturbations decreases, causing it to become increasingly similar to its past states over time. This behaviour can be detected by measuring temporal changes in lag-1 autocorrelation, variance, skewness, recovery rate, and other indicators. This library implements algorithms to measure temporal changes in lag-1 autocorrelation and variance in time-series. Both metrics tend to increase as the tipping point is gradually approached  ([see Scheffer et al. (2009)](https://doi.org/10.1038/nature08227)).
 
-The class `Ews` (stands for Early Warning Signals) contains the methods to detrend the time-series, estimate the resilience indicators, measure the strength of change in their trend over time, their robustness and significance.
+It is important to note that these metrics do not serve as forecasting tools to predict the distance to the tipping point; rather, they indicate the state of the system and are considered indicators of its resilience or stability ([see Dakos et al. (2015)](https://doi.org/10.1098/rstb.2013.0263)).
 
-First, we create an instance of the class `Ews` passing a `Pandas` time-series or dataframe as parameter. 
+Time series are typically detrended before estimating the indicators to avoid artifacts introduced by long-term trends and non-stationarities ([see Lenton et al. (2012)](https://doi.org/10.1098/rsta.2011.0304)). If a time series contains a seasonal cycle, it is also important to remove this cycle before computing the resilience indicators.
 
-Here we use the portion of the sample series before the regime shift.
+The `Ews` class (which stands for Early Warning Signals) includes methods for detrending time series, estimating resilience indicators, and assessing the strength of changes in their trends over time, along with their robustness and significance.
 
+First, we create an instance of the `Ews` class by passing a `Pandas` time-series or dataframe as a parameter. 
+
+In this example, we use the slice of the sample series before the tipping point.
 
 ```python
 series = ews.Ews(bef_rs)
 series = series.rename(columns={0:'Sample series'}) ## The Ews class returns an extended Dataframe object, if we provided a series, it sets 0 for the column name. 
 ```
 
-The method `gaussian_det` can be used to remove the trend using a moving average weighed by a Gaussian function (or a Gaussian kernel smoother), which receives the bandwidth (`bW`) of the Gaussian smoother kernel as a parameter ([see Lenton et al. (2012)](https://doi.org/10.1098/rsta.2011.0304)).
+The method `gaussian_det` is used to remove the trend using a moving average weighed by a Gaussian function (or a Gaussian kernel smoother). This method receives the bandwidth (`bW`) of the Gaussian smoother kernel as a parameter ([see Lenton et al. (2012)](https://doi.org/10.1098/rsta.2011.0304)).
 
-This method returns a class containing the attributes: `trend` and `res` (residuals).
+It returns an object containing two attributes: `trend`, which is a time-series representing the estimated trend, and `res`, which contains the residuals after removing the trend. 
 
 
 ```python
@@ -148,11 +145,11 @@ axs[0].legend(frameon=False);
     
 
 
-### Estimating autocorrelation and variance
+### Estimating lag-1 autocorrelation and variance
 
-From the proposed indicators for Critical Slowing Down in the literature, we included methods to measure lag-1 autocorrelation and variance on time-series. They are computed over a sliding window with a size determined by the user (parameter `wL`). The sliding window can be set as a number of data points or as a proportion of the time series (e.g. wL=0.5). These methods can be applied over the detrended data or they can be applied directly to the raw data, in which the detrending step can be applied by setting `detrend=True` and providing the bandwidth size (`bW`). 
+From the proposed indicators for Critical Slowing Down in the literature, this library includes methods to measure temporal changes in lag-1 autocorrelation and variance in time-series. Lag-1 autocorrelation measures the correlation of a time series with itself shifted by one time step, indicating how current values are related to their immediate past values. To assess how these indicators change over time, they are computed using a sliding window whose size is determined by the user (parameter `wL`). The sliding window can be specified either as a fixed number of data points or as a proportion of the time series (e.g., wL=0.5). These methods can be applied to either the detrended data or the raw data, with detrending performed by setting `detrend=True` and providing the bandwidth size (`bW`). 
 
-The methods to compute lag-1 autocorrelation are: `ar1()`, which fits an autoregressive model of order 1, and `pearsonc()`. The method `var()` computes variance. 
+The methods for computing lag-1 autocorrelation include `ar1()`, which fits an autoregressive model of order 1, and `pearsonc()`. The `var()` var computes the variance. 
 
 
 ```python
@@ -164,9 +161,9 @@ var = series.var(detrend=True,bW=bW,wL=wL) ## Computing variance
 
 ### Measuring the trend in the indicators with the non-parametric Kendall's $\tau$ correlation coefficient
 
-The Kendall $\tau$ coefficient cross-correlates time and the indicator series to assess the strength of change over time. The resulting coefficient ranges between -1 and 1: where values close to 1 indicate an increasing trend, and -1 a decreasing trend (see Lenton et al. (2012)). 
+The Kendall $\tau$ coefficient cross-correlates time with the indicator series to assess the strength of change over time. The resulting coefficient ranges from -1 to 1, where values close to 1 indicate an increasing trend, and values close to -1 indicate a decreasing trend (see Lenton et al. (2012)). 
 
-The Kendall coefficient is an attribute of the resulting indicator series and it is computed in this way:
+The Kendall coefficient is an attribute of the resulting indicator series and can be computed as follows:
 
 `series.ar1(detrend=True,bW=bW,wL=wL).kendall`.
 
@@ -202,9 +199,9 @@ axs[2].set_xlabel('Time',fontsize=13);
 
 #### AR(1) vs Pearson Correlation Coefficient
 
-The method `ar1()` fits a first-order autoregressive model (AR(1)) using an ordinary least-squares method. This method uses the `statsmodels` `AutoReg` function, which is relatively computationally expensive compared with computing the Pearson correlation coefficient. The method `pearsonc` uses the `Pandas` `autocorr` function to estimate the correlation beween the time-series comprised by the window and the same time-series shifted by one time-unit. 
+The method `ar1()` fits a first-order autoregressive model (AR(1)) using an ordinary least-squares method. This method uses the `AutoReg` function from the `statsmodels`  library, which, while robust, is relatively computationally intensive compared to simpler correlation calculations. In contrast, the `pearsonc()` method utilizes the `Pandas` `autocorr` function to estimate the Pearson correlation coefficient between a time-series and a version of itself shifted by one time unit. 
 
-As we can see in this section, both methods yield the same results. 
+Despite their differing approaches, both methods typically yield the same results when estimating lag-1 autocorrelation. This consistency provides users with flexibility in choosing an approach that best fits their needs, whether they prioritise computational efficiency or a statistical modeling method. 
 
 
 ```python
@@ -229,16 +226,19 @@ axs.set_xlabel('Time',fontsize=13);
 
 ### Assessing significance
 
-A proposed method to measure whether a trend is significant consists in comparing the measured trend with the expected trends from a null model. The null model consists of a large-enough number of surrogate series, each series having the same spectral properties as the original series ([see Dakos et al. (2012)](https://doi.org/10.1371/journal.pone.0041010)). This can be achieved by using a bootstrapping method: sampling with replacement from the residuals of the original time-series ([see Boulton et al. (2014)](https://doi.org/10.1038/ncomms6752)). The Kendall $\tau$ coefficient is measured for each surrogate series and the $p$-value is then defined as the proportion of series that exhibit a $\tau$-value greater (smaller) than or equal to that observed in the original series.
+A proposed method for assessing the significance of a trend involves comparing the observed trend to expected trends derived from a null model. This null model is constructed by generating a sufficiently large number of surrogate time series, each designed to feature the same spectral properties as the original series ([see Dakos et al. (2012)](https://doi.org/10.1371/journal.pone.0041010)).
 
-The function `significance` follows this method to return an object with the following attributes:
+Here, surrogate series are generated using a bootstrapping approach, where residuals from the original time series are sampled with replacement ([see Boulton et al. (2014)](https://doi.org/10.1038/ncomms6752)). The Kendall $\tau$ coefficient is measured for each surrogate series and the $p$-value is defined as the proportion of series that exhibit a $\tau$-value greater than (or less than, depending on the hypothesis) or equal to that observed in the original series.
+
+
+The `significance()` function employs a null model approach to assess the significance of trends in resilience indicators. It returns an object with the following attributes:
 
 - `indicator`: The resilience indicator
-- `surrog_kendalls`: a `Pandas dataframe` containing the Kendall values measured on each surrogate series.
-- `kendall_coeff`: The Kendall coefficient for the indicator's trend computed on the original series
-- `pvalue`: The p-value
-- `test_type`: Positive or negative, defined to assess whether the trend is significantly positive or negative. 
-- `plot()`: Method to plot the output from the test.
+- `surrog_kendalls`: a `Pandas dataframe` containing the Kendall values calculated for each surrogate series.
+- `kendall_coeff`: The Kendall coefficient representing the trend of the resilience indicator computed from the original time-series.
+- `pvalue`: The p-value indicating the statistical significance of the observed trend in relation to the trends observed in the surrogate series.
+- `test_type`: A string specifying the type of trend assessment, either "positive" or "negative," to determine if the trend is significantly increasing or decreasing.
+- `plot()`: A method to visualise the results of the significance test, providing a graphical representation of the observed trend alongside the distribution of the trends in the surrogate series.
 
 
 ```python
@@ -275,7 +275,7 @@ print(f'Variance p-value: {sig_variance.pvalue["Sample series"]}')
 
 #### Visualising the significance test
 
-The `plot()` method plots the distribution of Kendall $\tau$ values obtained from the surrogate series and a red vertical line that indicates the Kendall coefficient measured on the original series. 
+The `plot()` method displays a histogram featuring the distribution of Kendall $\tau$ values obtained from the surrogate series, and a red vertical line indicating the Kendall coefficient measured on the original series. 
 
 
 ```python
@@ -301,11 +301,20 @@ sig_variance.plot()
 
 ### Robustness analysis
 
-The method `robustness()` measures the trends for the specified indicators over a range of combinations of window lengths and detrending bandwidths.
+The `robustness()` method evaluates the trends for the specified indicators across a range of combinations of window lengths and detrending bandwidths. This analysis helps to assess the sensitivity of the observed trends to different parameter settings.
 
-This method receives as parameters the indicators to assess, the minimum and maximum window length (`min_wL` and `max_wL`) as well as its resolution (`res_wL`). Likewise for the detrending bandwidth (`min_bW`,`max_bW`,`res_bW`).
+**Parameters:**
 
-This method returns a dictionary in which the keys correspond to the dataframe column names. Each key is associated to another dictionary containing Pandas dataframes with the Kendall values across all the combination of parameters (The columns corresponding to each window size and the indices to the different bandwidths).
+- `indicators`: A list with the names of the resilience indicators to assess (`ar1`,`pearsonc`,`var`).
+- `min_wL`: The minimum window length.
+- `max_wL`: The maximum window length.
+- `res_wL`: The resolution for the window length range.
+- `min_bW`: The minimum detrending bandwidth.
+- `max_bW`: The maximum detrending bandwidth.
+- `res_bW`: The resolution for the detrending bandwidth range.
+
+
+This method returns a dictionary of Pandas dataframes containing the Kendall values for all combinations of the specified parameters. In each dataframe, the columns correspond to different window sizes, while the indices represent the bandwidths used in the analysis.
 
 
 ```python
@@ -321,19 +330,6 @@ rob['Sample series']['pearsonc']
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -659,7 +655,7 @@ rob['Sample series']['pearsonc']
 
 #### Robustness figures
 
-The robustness results can be represented as colourmaps by using the `plot()` method. In this method, the parameters `vmin`,`vmax`,`cmap` and other arguments for the `Matplotlib pcolormesh` function can be specified.
+The robustness results can be visualized as color maps using the `plot()` method. This method allows you to specify parameters such as `vmin`,`vmax`,`cmap` and other arguments for the `Matplotlib pcolormesh` function to customize the appearance of the plot.
 
 
 ```python
