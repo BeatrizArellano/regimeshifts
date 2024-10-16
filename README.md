@@ -7,7 +7,7 @@
 `regimeshifts` contains two modules:
 
 - `regime_shifts`: Provides a method for detecting regime shifts in time-series. 
-- `ews`: Provides functions to compute early warning signals or resilience indicators, along with tools to assess their robustness and significance.
+- `ews`: Provides functions to compute early warning signals for tipping points or resilience indicators, along with tools to assess their robustness and significance.
 
 This repository can be copied into the working directory using the command:
 
