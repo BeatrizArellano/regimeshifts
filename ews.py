@@ -297,7 +297,7 @@ class Ews(pd.DataFrame):
             kendall, _ = kendalltau(ts.dropna().values, np.arange(0,len(ts.dropna())))
             return kendall
         kendall = self.apply(_estimate_kendall, axis=0)
-        kendall = float(kendall) if len(self.columns)==1 else kendall
+        kendall = float(kendall.iloc[0]) if len(self.columns)==1 else kendall
         return kendall
     
     class Significance_test:
