@@ -139,6 +139,27 @@ class Ews(pd.DataFrame):
     This class extends the pandas DataFrame to provide built-in methods for
     detrending and analysing time series using indicators of resilience.
     """
+    def __init__(self, data, *args, **kwargs):
+        # Initialize as a normal pandas DataFrame
+        super().__init__(data, *args, **kwargs)
+
+    @property
+    def _constructor(self):
+        """Ensure DataFrame operations return an instance of Ews."""
+        return Ews
+
+#    def __getitem__(self, key):
+#        """
+#        Overrideing __getitem__ to return Ews instance for column slicing.
+#        """
+#        result = super().__getitem__(key)        
+#        # If a single column is sliced (result is a Series), return it as an Ews instance
+#        if isinstance(result, pd.Series):
+#            return Ews(result)  # Return the Ews class for single-column slicing        
+#        # If multiple columns are sliced (result is a DataFrame), return it as an Ews instance
+#        elif isinstance(result, pd.DataFrame):
+#            return Ews(result)  # Return the Ews class for multiple-column slicing        
+#        return result  # Default behavior for other cases (e.g., row slicing, DataFrame slicing)
     
     class Filtered_ts:
         """
@@ -210,7 +231,7 @@ class Ews(pd.DataFrame):
         --------
         >>> noise = np.random.normal(0,20,1000)
         >>> ts = pd.Series(np.arange(0,100,0.1)*2+ noise)
-        >>> ts = Ews(ts)
+        >>> ts = Ews(np.random.normal(size=1000))
         >>> trend = ts.gaussian_det(bW=30).trend
         >>> residuals = ts.gaussian_det(bW=30).res
         
@@ -369,8 +390,7 @@ class Ews(pd.DataFrame):
         
         Examples
         --------
-        >>> ts = pd.Series(np.random.normal(size=1000))
-        >>> ts = Ews(ts)
+        >>> ts = Ews(np.random.normal(size=1000))
         >>> ar1_ts = ts.ar1(detrend=True,bW=100,wL=0.4)
         
         """
@@ -430,8 +450,7 @@ class Ews(pd.DataFrame):
 
         Examples
         --------
-        >>> ts = pd.Series(np.random.normal(size=1000))
-        >>> ts = Ews(ts)
+        >>> ts = Ews(np.random.normal(size=1000))
         >>> lambda_ts = ts.lambd(detrend=True,bW=100,wL=0.4)
         
         """
@@ -506,8 +525,7 @@ class Ews(pd.DataFrame):
 
             Examples
             --------
-            >>> ts = pd.Series(np.random.normal(size=1000))
-            >>> ts = Ews(ts)
+            >>> ts = Ews(np.random.normal(size=1000))
             >>> var_ts = ts.var(detrend=True,bW=100,wL=0.4)
             
             """
@@ -555,8 +573,7 @@ class Ews(pd.DataFrame):
 
             Examples
             --------
-            >>> ts = pd.Series(np.random.normal(size=1000))
-            >>> ts = Ews(ts)
+            >>> ts = Ews(np.random.normal(size=1000))
             >>> skw_series = ts.skw(detrend=True,bW=100,wL=0.4)
 
             """
@@ -616,8 +633,7 @@ class Ews(pd.DataFrame):
         
         Examples
         --------
-        >>> ts = pd.Series(np.random.normal(size=1000))
-        >>> ts = Ews(ts)
+        >>> ts = Ews(np.random.normal(size=1000))
         >>> pearsonc_series = ts.pearsonc(detrend=True,bW=100,wL=0.4)
         
         """
@@ -663,8 +679,7 @@ class Ews(pd.DataFrame):
             
         Examples
         --------
-        >>> ts = pd.Series(np.random.normal(size=1000))
-        >>> ts = Ews(ts)
+        >>> ts = Ews(np.random.normal(size=1000))
         >>> ar1_ts = ts.ar1(detrend=True,bW=100,wL=0.4)
         >>> ar1_ts.kendall
         0.87
@@ -734,8 +749,7 @@ class Ews(pd.DataFrame):
                 This method generates a plot and does not return any values.
             Examples
             --------
-            >>> ts = pd.Series(np.random.normal(size=1000))
-            >>> ts = Ews(ts)
+            >>> ts = Ews(np.random.normal(size=1000))
             >>> ar1_significance = ts.significance(indicator='ar1',detrend=True,wL=0.4,bW=80)
             >>> ar1_significance.plot()
             
@@ -841,8 +855,7 @@ class Ews(pd.DataFrame):
 
         Examples
         --------
-        >>> ts = pd.Series(np.random.normal(size=1000))
-        >>> ts = Ews(ts)
+        >>> ts = Ews(np.random.normal(size=1000))
         >>> ar1_significance = ts.significance(indicator='ar1',detrend=True,wL=0.4,bW=80)
         
         """
@@ -912,8 +925,7 @@ class Ews(pd.DataFrame):
                 
             Examples
             --------
-            >>> ts = pd.Series(np.random.normal(size=1000))
-            >>> ts = Ews(ts)
+            >>> ts = Ews(np.random.normal(size=1000))
             >>> robustness = ts.robustness(indicators=['ar1','var'])
             >>> robustness.plot()
             
@@ -1004,8 +1016,7 @@ class Ews(pd.DataFrame):
             
         Examples
         --------
-        >>> ts = pd.Series(np.random.normal(size=1000))
-        >>> ts = Ews(ts)
+        >>> ts = Ews(np.random.normal(size=1000))
         >>> robustness = ts.robustness(indicators=['ar1','var'])
         
         """
@@ -1056,22 +1067,8 @@ class Ews(pd.DataFrame):
         for col in self.columns:  
             robustness_dict[col] = _get_robustness_ts(self[col],col,indicators=indicators,min_wL=min_wL,max_wL=max_wL,res_wL=res_wL,min_bW=min_bW,max_bW=max_bW,res_bW=res_bW,**kwargs)
         return self.Robustness_dict(robustness_dict)
-        
-    
-    @property
-    def _constructor(self):
-        """
-        Overriding constructor properties to return an instance of Ews after
-        performing an operation on the Pandas Dataframe.
-        """
-        return Ews
-
 
     
-    # @property
-    # def _constructor_sliced(self):
-    #     return Ews
-
             
             
             
