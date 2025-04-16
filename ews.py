@@ -17,6 +17,8 @@ Resilience metrics
     ar1
     var
     pearsonc
+    skw
+    lambd
     
 Trend's strength
 =========================================
@@ -36,6 +38,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.ndimage.filters import gaussian_filter
+import statsmodels.api as sm
 from statsmodels.tsa.ar_model import AutoReg
 from scipy.stats import kendalltau
 
@@ -188,6 +191,53 @@ class Ews(pd.DataFrame):
             return ar1c
         ar1c = self.apply(_estimate_ar1c, axis=0,wL=wL,lag=lag,**kwargs)
         return Ews(ar1c)
+
+    @validator
+    def lambd(self,detrend=False,wL=0.5,**kwargs):
+        """
+        Estimates the linear restoring rate (lambda) for a time series over a sliding window.
+
+        This method implements the metric described by Boers (2021), calculating the system linear restoring rate (lambda) around a given stable equilibrium state.
+
+        Parameters:
+            detrend (bool, optional): If True, performs Gaussian detrending on the data before estimation. Default is False.
+            wL (float, optional): Window length as a fraction of the series or as an integer. Default is 0.5.
+            **kwargs: Additional keyword arguments passed to the pandas rolling function.
+        
+        Returns:
+            pandas.Series: Lambda coefficients (linear restoring rates) for each time-step.
+        
+        References:
+        Boers, N. (2021). Observation-based early-warning signals for a collapse of the Atlantic Meridional Overturning Circulation. 
+        Nature Climate Change, 11(8), 680–688.
+        """
+        def _estimate_lambda(ts,wL,**kwargs):
+            ts, wL = self._window_size(ts,wL)
+            def _get_lambda_w(xw):
+                """
+                Calculates the linear restoring rate metric as described in the 2021 publication by Niklas Broers.
+                
+                This function is adapted from the code in the Github repository:
+                https://github.com/niklasboers/AMOC_EWS/blob/main/EWS_functions.py
+
+                References:
+                Boers, N. (2021). Observation-based early-warning signals for a collapse of the Atlantic Meridional Overturning Circulation. 
+                Nature Climate Change, 11(8), 680–688.
+                """
+                xw = xw - xw.mean()
+                p0, p1 = np.polyfit(np.arange(xw.shape[0]), xw, 1)
+                xw = xw - p0 * np.arange(xw.shape[0]) - p1
+                dxw = xw[1:] - xw[:-1]
+                xw = sm.add_constant(xw)
+                model = sm.GLSAR(dxw, xw[:-1], rho=1)
+                results = model.iterative_fit(maxiter=10)
+                lambda_coeff = results.params[1]
+                return lambda_coeff
+            
+            lambdacoeff = ts.rolling(window=wL,**kwargs).apply(_get_lambda_w, raw=True)
+            return lambdacoeff
+        lambdacoeff = self.apply(_estimate_lambda, axis=0,wL=wL,**kwargs)
+        return Ews(lambdacoeff)
     
     @validator
     def var(self,detrend=False,wL=0.5,**kwargs):
@@ -201,6 +251,19 @@ class Ews(pd.DataFrame):
             return vari
         vari = self.apply(_estimate_var, axis=0,wL=wL,**kwargs)        
         return Ews(vari)
+
+    @validator
+    def skw(self,detrend=False,wL=0.5,**kwargs):
+       
+        def _estimate_skw(ts,wL,**kwargs):
+            """
+            Estimates skewness along the sliding window over a pandas Series
+            """
+            ts,wL = self._window_size(ts,wL)
+            skw = ts.rolling(window=wL,**kwargs).skew()
+            return skw
+        skw = self.apply(_estimate_skw, axis=0,wL=wL,**kwargs)        
+        return Ews(skw)
     
     @validator
     def pearsonc(self,detrend=False,wL=0.5,lag=1,**kwargs):
