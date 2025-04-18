@@ -458,7 +458,8 @@ class Ews(pd.DataFrame):
             ts, wL = self._window_size(ts,wL)
             def _get_lambda_w(xw):
                 """
-                Calculates the linear restoring rate metric as described in the 2021 publication by Niklas Boers.
+                Calculates the linear restoring rate metric for each window
+                as described in the 2021 publication by Niklas Boers.
                 
                 This function is adapted from the code in the Github repository:
                 https://github.com/niklasboers/AMOC_EWS/blob/main/EWS_functions.py
